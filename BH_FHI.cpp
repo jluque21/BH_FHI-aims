@@ -17,18 +17,12 @@ N_Simbolo_2=system("grep 'cluster_ntyp' $1 | cut -d '[' -f 3 | cut -d ':' -f 2 |
 n=system("grep 'cluster_ntyp'  $1 | awk '{print $4}' | wc -c >> variables")  //Este es un criterio para determinar si es bimetÃ¡lico o no
 
 continue=system("grep 'continue' $1 | cut -d ' ' -f 3 >> variables")
-
+initialization_file=system("grep 'initialization_file' $1 | awk '{print $3}'")
 randomness=system("grep 'randomness' $1 | awk '{print $3}' >> variables")
 kick=system("grep 'kick_type' $1 | awk '{print $3}' >> variables")
 file_name=system("grep 'file_name' $1 | awk '{print $3}' >> variables")
 step_width=system("grep 'step_width' $1 | awk '{print $3}' >> variables")
 Temperature=system("grep 'temperature_K' $1 | awk '{ print $3 }' >> variables")
-//if [ $n -gt 3 ]
-//then
-//Nat=N_Simbolo_1+N_Simbolo_2 //Numero de atomos del cluster
-//else
-//Nat=N_Simbolo_1
-//fi
 Ncore=ncore=system("grep '#BSUB -n' $0 | head -1 | awk '{print $3}' >> variables")
 iteraciones=system("grep 'iterations' $1 | awk '{ print $3 }' >> variables")
 path=system("grep 'initialization_file' $1 | awk '{ print $3 }' >> variables")
@@ -37,73 +31,74 @@ m=1 //contador de coords rechazadas
 swap_step=system("grep 'swap_step' $1 | awk '{ print $3 }' >> variables")
 
 
-if(argc == 17 )
-{
-   Simbolo_2=argv[14];
-   N_Simbolo_2=stoi(argv[15]);
-}
-
 //################################# CREATES Work Directory #####################################
 command="if [ -d $file_name ] ; then mv $file_name other_$file_name ; fi ; cp -r input $file_name";
-
+system(comand);
 
 //##############################################################################################
 //#                                         BEGIN ALGORITHM                                    #
 //##############################################################################################
 
-
-system("mkdir rejected");
+system("cd $file_name ; mkdir rejected");
 contenido=0;
 count=1;
 while(contenido!=1)
 {
 
-  if(initialization_file==1 && count==1)
+  if(initialization_file!=false && count==1)
   {
     //Inicializa archivo geometry.in
+    system("cp initalization_file geometry.in")
     count++;
   }
   else
   {
     //Empieza desde 0
-    if(n>3)  //Esto quiere decir que es bimetalico
+    if(type == "bimetalic")  //Esto quiere decir que es bimetalico
     {
       if(randomness==1)  // fully random
       {
-        // clus.SRandomGenerator(...)
+        clus.srand_generator
       }
       else //pseudoaleatorio
       {
-        // clus.RandomGenerator(...)
+        clus.rand_generator
       }
     }
     else //es monometalico
     {
-        if(randomness==1)  // fully random
-        {
-          // clus.SRandomGenerator(...)
-        }
-        else //pseudoaleatorio
-        {
-          // clus.RandomGenerator(...)
-        }
+    	if(randomness==1)  // fully random
+      {
+        clus.srand_generator
+      }
+      else //pseudoaleatorio
+      {
+        clus.rand_generator
+      }
     }
   }
     
   system("./run.sh");
   system("grep 'Have a nice day.' output.out | wc -l > contenido.txt"); //Checar output nombre, poner if=1 then
-  ifstream cont...
-  //read contenido.txt
+  ifstream cont("contenido.txt");
+  cont>>contenido;
+  cont.close();
+  system("rm contenido.txt");
+
 }
 
-/////////  MODIFICAR ESTO PARA FHI AIMS (AHORITA ESTA PARA vasp)
-system("grep \" | Total energy of the DFT / Hartree-Fock s.c.f. calculation \" output.out | cut -d \":\" -f 2 >> energy.txt")
-readfhi(geometry.in.next_step) print_xyz (geometry1.xyz)   // Dentro de loop
-mv output.out output1.out   // Dentro de loop
+system("grep \" | Total energy of the DFT / Hartree-Fock s.c.f. calculation \" output.out | cut -d \":\" -f 2 > energy.txt")
+ifstream en("energy.txt");
+en>>energy;
+en.close();
+system("rm energy.txt");
 
-
-//cout<<"Step  Energy" >> energies.txt;
-//cout<<echo "1     $Energia" >> energies.txt
+clus.read_fhi("geometry.in.next_step");
+clus.print_xyz("coordinates1.xyz");
+system("mv output.out output1.out");
+system("mv geometry.in geometry1.in");
+system("echo Step Energy >> energies.txt");
+system("echo 1     "+to_string(energy)+" >> energies.txt".c_str() );
 
 cout<<" --> Relaxation of initial configuration: DONE! "<<endl<<endl;
 cout<<"=================================================================="<<endl;
@@ -131,24 +126,27 @@ while(i+m < iteraciones)
   }
   if(resto==0)
   {
-    //aplica swap;
+    clus.swap(swap_step);
   }
   else
   {
     //aplica move;
     if(kick==0)
     {
-      //aplica tipo depatada =0
+      clus.kick(step_width);
     }
     else
     {
-      //aplica la otra patada
+      clus.kicklenard(step_width);
     }
   }
   system("./run.sh");
   system("grep 'Have a nice day. ' output.out | wc -l > contenido.txt");
-  ifstream cont...
-  //read contenidoi=contenido.txt
+  ifstream cont("contenido.txt");
+  cont>>contenido;
+  cont.close();
+  system("rm contenido.txt");
+  
 
   while (contenido!=1)
   {
@@ -156,69 +154,74 @@ while(i+m < iteraciones)
 
   if(n>3)  //Esto quiere decir que es bimetalico
   {
-    if(randomness==1)  // fully random
-    {
-      // clus.SRandomGenerator(...)
-    }
-    else //pseudoaleatorio
-    {
-      // clus.RandomGenerator(...)
-    }
-  }
-  else //es monometalico
-  {
-      if(randomness==1)  // fully random
+    	if(randomness==1)  // fully random
       {
-        // clus.SRandomGenerator(...)
+        clus.srand_generator
       }
       else //pseudoaleatorio
       {
-        // clus.RandomGenerator(...)
+        clus.rand_generator
+      }
+  }
+  else //es monometalico
+  {
+      	if(randomness==1)  // fully random
+      {
+        clus.srand_generator
+      }
+      else //pseudoaleatorio
+      {
+        clus.rand_generator
       }
   }
 
   system("./run.sh");
   system("grep 'Have a nice day. ' output.out | wc -l > contenido.txt");
-  ifstream cont...
-  //read contenidoi=contenido.txt
+  ifstream cont("contenido.txt");
+  cont>>contenido;
+  cont.close();
+  system("rm contenido.txt");
   }
 
   ################################################################################################
   #                                     Save  configuration                                      #
   ################################################################################################
 
-     EnergiaAnterior=$(echo $Energia)
-    // Energia=$(tail -1 OSZICAR | awk '{print $5 }')    #Extrae energia del OSZICAR
 
-     echo "$i     $Energia " >> CONTCAR$i
-     N=$(wc -l CONTCAR | awk '{ print $1 }' )
-     tail -$(($N-1)) CONTCAR >> CONTCAR$i  //Renombra los archivos y les agrega la energia
-     mv POSCAR POSCAR$i
-     //rm CHG CHGCAR DOSCAR OSZICAR EIGENVAL XDATCAR IBZKPT  PCDAT REPORT WAVECAR *.xml CONTCAR
+EnergiaAnterior=energy;
+system("grep \" | Total energy of the DFT / Hartree-Fock s.c.f. calculation \" output.out | cut -d \":\" -f 2  | cut -d 'e' -f 1 > energy.txt");
+ifstream en("energy.txt");
+en>>energy;
+en.close();
+system("rm energy.txt");
+
+clus.read_fhi("geometry.in.next_step");
+clus.print_xyz("cordinates"+to_string(i)+".xyz".c_str(), energy );
+system("mv output.out output"+to_string(i)+".out".c_str());
+system("mv geometry.in geometry"+to_string(i)+".in".c_str());
+system("echo "+to_string(i)+"  "+to_string(energy)+" >> energies.txt".c_str() );
+
 
   ################################################################################################
   #                                  Metropolis Monte-Carlo                                      #
   ################################################################################################
 
-     accepted=$(python ../programs/metropolis.py $EnergiaAnterior $Energia $Temperature)
 
-        if [ $accepted = true ]
-        then   // La energia ha sido aceptada
-
-          echo "--> Basin Hopping MC criteria: Energy accepted! "
-          echo "--> Finished iteration $i"
-          head -1 CONTCAR$i >> energies.txt
-          tail -$i energies.txt |  sort -nk2 > sorted.txt
-          i=$(($i+1)) //Convergencia lograda, aumenta en 1 el contador
-
-        else
-
-          echo "--> Basin Hopping MC criteria: Energy rejected!"
-          mv output$i.outt rejected/outputrejected$i.out
-          mv geometry$i.in rejected/geometryrejected$i.in
-          m=$(($m+1))
-
-        fi
+kBT = 0.00008617 * temperature_K;
+if (pow(e,(EnergiaAnterior-energy)/kBT) > random_number(0,1))
+{
+	cout<<"--> Basin Hopping MC criteria: Energy accepted! "<<endl;
+    cout<<"--> Finished iteration $i"<<endl;
+    system("tail "-$i "energies.txt |  sort -nk2 > sorted.txt");
+    i++;
+}
+else
+{
+	cout<<echo "--> Basin Hopping MC criteria: Energy rejected!"<<endl;
+    system("mv output"$i".out rejected/outputrejected"$i".out");
+    system("mv geometry"$i".in rejected/geometryrejected"$i".in");
+    m++;
+}
 }
 return 0;
 }
