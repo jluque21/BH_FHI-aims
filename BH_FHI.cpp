@@ -1,132 +1,163 @@
-#include<atomicpp.h>
-
-int continue_alg, randomness, kick, iteraciones,swap_step, contenido;
-float step_width, temperature ;
-string file_name, command;
+#include"atomicpp.h"
+string Simbolo_1, Simbolo_2, file_name, command, aux,geometry_file, initialization_file, outputfile, i_str, E_str, tag;
+int continue_alg,  Ncore, randomness, kick, iteraciones,swap_step, contenido, m, N_Simbolo_1, N_Simbolo_2, count, resto;
+float step_width, Temperature, Energia, EnergiaAnterior, k_BT ;
+double Energy;
+Cluster clus_1, clus_2, clus;
 int main(int argc, char *argv[]){
+//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+//                                    Gets data from input.bh                                     //
+//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+Simbolo_1=string_pipe("grep 'cluster_ntyp' input.bh | cut -d '[' -f 2 | cut -d ':' -f 1 ");
+Simbolo_2=string_pipe("grep 'cluster_ntyp' input.bh | cut -d '[' -f 3 | cut -d ':' -f 1 ");
+N_Simbolo_1=int_pipe("grep 'cluster_ntyp' input.bh | cut -d '[' -f 2 | cut -d ':' -f 2 | cut -d ']' -f 1 ");
+N_Simbolo_2=int_pipe("grep 'cluster_ntyp' input.bh | cut -d '[' -f 3 | cut -d ':' -f 2 | cut -d ']' -f 1 ");
+continue_alg=int_pipe("grep 'continue' input.bh | awk '{print $3}' ");
+initialization_file=string_pipe("grep 'initialization_file' input.bh | awk '{print $3}' ");
+randomness=int_pipe("grep 'randomness' input.bh | awk '{print $3}' ");
+kick=int_pipe("grep 'kick_type' input.bh | awk '{print $3}' ");
+file_name=string_pipe("grep 'file_name' input.bh | awk '{print $3}' ");
+step_width=float_pipe("grep 'step_width' input.bh | awk '{print $3}' "); //o double?
+Temperature=float_pipe("grep 'temperature_K' input.bh | awk '{ print $3 }' "); //o double?
+Ncore=int_pipe("grep 'Ncore' input.bh | head -1 | awk '{print $3}' ");
+iteraciones=int_pipe("grep 'iterations' input.bh | awk '{ print $3 }' ");
+swap_step=int_pipe("grep 'swap_step' input.bh | awk '{ print $3 }' ");
 
-//################################################################################################
-//#                                    Gets data from input.bh                                   #
-//################################################################################################
+int i = 1;
 
-Simbolo_1=system("grep 'cluster_ntyp' $1 | cut -d '[' -f 2 | cut -d ':' -f 1 >> variables")
-Simbolo_2=system("grep 'cluster_ntyp' $1 | cut -d '[' -f 3 | cut -d ':' -f 1) 2>/dev/null >> variables")
-N_Simbolo_1=system("grep 'cluster_ntyp' $1 | cut -d '[' -f 2 | cut -d ':' -f 2 | cut -d ']' -f 1 >> variables")
-N_Simbolo_2=0
-N_Simbolo_2=system("grep 'cluster_ntyp' $1 | cut -d '[' -f 3 | cut -d ':' -f 2 | cut -d ']' -f 1) 2>/dev/null >> variables")
-n=system("grep 'cluster_ntyp'  $1 | awk '{print $4}' | wc -c >> variables")  //Este es un criterio para determinar si es bimetÃ¡lico o no
+if(continue_alg==1){
+  //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+  //                                      RESTART ALGORITHM                                         //
+  //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+      string iteration_counter_i ="cd ";
+             iteration_counter_i+=file_name;
+             iteration_counter_i+=" ; for i in $(ls coord*xyz ); do head -2 $i | tail -1 | awk '{ print $2 }' ; done | sort -n  | tail -1";
+  i=int_pipe(iteration_counter_i,1);
 
-continue=system("grep 'continue' $1 | cut -d ' ' -f 3 >> variables")
-initialization_file=system("grep 'initialization_file' $1 | awk '{print $3}'")
-randomness=system("grep 'randomness' $1 | awk '{print $3}' >> variables")
-kick=system("grep 'kick_type' $1 | awk '{print $3}' >> variables")
-file_name=system("grep 'file_name' $1 | awk '{print $3}' >> variables")
-step_width=system("grep 'step_width' $1 | awk '{print $3}' >> variables")
-Temperature=system("grep 'temperature_K' $1 | awk '{ print $3 }' >> variables")
-Ncore=ncore=system("grep '#BSUB -n' $0 | head -1 | awk '{print $3}' >> variables")
-iteraciones=system("grep 'iterations' $1 | awk '{ print $3 }' >> variables")
-path=system("grep 'initialization_file' $1 | awk '{ print $3 }' >> variables")
-Npath=system("echo $path | wc -c >> variables")
-m=1 //contador de coords rechazadas
-swap_step=system("grep 'swap_step' $1 | awk '{ print $3 }' >> variables")
-
-
-//################################# CREATES Work Directory #####################################
-command="if [ -d $file_name ] ; then mv $file_name other_$file_name ; fi ; cp -r input $file_name";
-system(comand);
-
-//##############################################################################################
-//#                                         BEGIN ALGORITHM                                    #
-//##############################################################################################
-
-system("cd $file_name ; mkdir rejected");
-contenido=0;
-count=1;
-while(contenido!=1)
-{
-
-  if(initialization_file!=false && count==1)
-  {
-    //Inicializa archivo geometry.in
-    system("cp initalization_file geometry.in")
-    count++;
-  }
-  else
-  {
-    //Empieza desde 0
-    if(type == "bimetalic")  //Esto quiere decir que es bimetalico
-    {
-      if(randomness==1)  // fully random
-      {
-        clus.srand_generator
-      }
-      else //pseudoaleatorio
-      {
-        clus.rand_generator
-      }
-    }
-    else //es monometalico
-    {
-    	if(randomness==1)  // fully random
-      {
-        clus.srand_generator
-      }
-      else //pseudoaleatorio
-      {
-        clus.rand_generator
-      }
-    }
-  }
-    
-  system("./run.sh");
-  system("grep 'Have a nice day.' output.out | wc -l > contenido.txt"); //Checar output nombre, poner if=1 then
-  ifstream cont("contenido.txt");
-  cont>>contenido;
-  cont.close();
-  system("rm contenido.txt");
-
+      string iteration_counter_m ="cd ";
+             iteration_counter_m+=file_name;
+             iteration_counter_m+="/rejected ; ls coord*xyz 2> /dev/null | wc -l ";
+  m=int_pipe(iteration_counter_m,0);
 }
+else{
+  //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+  //                                        BEGIN ALGORITHM                                         //
+  //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+   // Creates work directory
+   command ="if [ -d "+file_name+" ] ; then mv "+file_name+" other_"+file_name;
+   command+=" ; fi ; mkdir "+file_name+" ; cd "+file_name+"  ; mkdir rejected ;";
+   //system(command.c_str()); command.clear(); command="cd input ; echo 'running command' >> run.sh "; system(command.c_str()); command.clear();
+   command+=" cp ../input/* .";
+   system(command.c_str());
+   i=1; m=0;
+   contenido=0;
+   count=1;
+   while(contenido!=1)
+   {
+      if(initialization_file.length() > 5 && count==1)
+      {
+      cout<<"Initialization file = "<<initialization_file<<endl;
+      //Inicializa archivo geometry.in
+        command ="cp ";
+        command+=initialization_file;
+        command+=" "+file_name+"/geometry.in";
+        system(command.c_str());
+        command.clear();
+        count++;
+      }
+      else
+      {
+      //Empieza desde 0
+         if(N_Simbolo_2>0)  //Esto quiere decir que es bimetalico
+         {
+            if(randomness==1)  // fully random
+            {
+               clus.srand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+            }
+            else //pseudoaleatorio
+            {
+               clus.rand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
+            }
+         }
+         else //es monometalico
+         {
+            if(randomness==1)  // fully random
+            {
+               clus.srand_generator(Simbolo_1,N_Simbolo_1);
+            }
+            else //pseudoaleatorio
+            {
+               clus.rand_generator(Simbolo_1,N_Simbolo_1);
+            }
+         }
+         geometry_file.clear();
+         geometry_file=file_name+"/geometry.in";
+         clus.print_fhi(geometry_file);
+      }
+      command.clear();
+      command="cd "+file_name+" ; ./run.sh";
+      system(command.c_str());
+      command.clear();
+      command="cd "+file_name+" ; grep 'Have a nice day' output.out | wc -l";
+      contenido=int_pipe(command.c_str());
+   }
+   command.clear();
+   command="cd "+file_name+" ; grep \" | Total energy of the DFT \" output.out | awk '{print $12}' "; //| cut -d ":" -f 2 | cut -d "e" -f 1
+   Energy=double_pipe(command.c_str());
+   i_str=to_string(i);
+   E_str=string_pipe(command); //Better for Eneregies with all the value
+   cout<<"Energy double = "<<Energy<<endl;
+   cout<<"Energy string = "<<E_str<<endl;
+   command.clear();
+   command=file_name+"/geometry.in.next_step";
+   clus.read_fhi(command); command.clear(); command=file_name+"/coordinates1.xyz";
+   tag.clear();
+   tag=" Iteration "+i_str+" -----> Energy = "+E_str+" eV ";
+   clus.print_xyz(command,tag);
+   command.clear(); command="cd "+file_name+" ; mv output.out output1.out ; ";
+   command+=" mv geometry.in geometry1.in ; echo 'Step ----> Energy[eV]' >> energies.txt ; echo '1 ---->' "+E_str+" >> energies.txt";
+   system(command.c_str());
 
-system("grep \" | Total energy of the DFT / Hartree-Fock s.c.f. calculation \" output.out | cut -d \":\" -f 2 > energy.txt")
-ifstream en("energy.txt");
-en>>energy;
-en.close();
-system("rm energy.txt");
-
-clus.read_fhi("geometry.in.next_step");
-clus.print_xyz("coordinates1.xyz");
-system("mv output.out output1.out");
-system("mv geometry.in geometry1.in");
-system("echo Step Energy >> energies.txt");
-system("echo 1     "+to_string(energy)+" >> energies.txt".c_str() );
-
-cout<<" --> Relaxation of initial configuration: DONE! "<<endl<<endl;
-cout<<"=================================================================="<<endl;
-cout<<"BH-DFT routine starts here! "<<endl;
-cout<<"Note: "<<endl;
-cout<<"For monometallic clusters: only random xyz moves will be applied "<<endl;
-cout<<"For bimetallic clusters  : 1 atomic swap will be performed after 10 moves "<<endl;
-cout<<"==================================================================="<<endl<<endl;
-
-i=2
-
-while(i+m < iteraciones)
+   cout<<" --> Relaxation of initial configuration: DONE! "<<endl<<endl;
+   cout<<"=================================================================="<<endl;
+   cout<<"BH-DFT routine starts here! "<<endl;
+   cout<<"Note: "<<endl;
+   cout<<"For monometallic clusters: only random xyz moves will be applied "<<endl;
+   cout<<"For bimetallic clusters  : 1 atomic swap will be performed after "<<swap_step<<" moves "<<endl;
+   cout<<"==================================================================="<<endl<<endl;
+   i=2;
+}
+while(i+m <= iteraciones)
 {
   resto=i%swap_step;
-  //extract cluster
-  if(n>3) //es bimetalico
+  geometry_file.clear();
+  geometry_file=file_name+"/geometry.in.next_step";
+  i_str.clear(); E_str.clear();
+  i_str=to_string(i);
+  // Get cluster coordinates from output file
+  if(N_Simbolo_2>0) //es bimetalico
   {
-    cluster=extract(Simbolo_1,outputfile);
-    cluster=extract(Simbolo_2,outputfile);
-    cluster=cluster+cluster;
+    clus_1=extract(geometry_file,Simbolo_1);
+    clus_2=extract(geometry_file,Simbolo_2);
+    clus  =clus_1+clus_2;
   }
   else //es monometalico
   {
-    cluster=extract(Simbolo_1,outputfile);
+    clus=extract(geometry_file,Simbolo_1);
   }
-  if(resto==0)
+  // Applies swap or kick
+  if(resto==0 && N_Simbolo_2 > 0)
   {
-    clus.swap(swap_step);
+   cout<<"Applying swap step"<<endl;
+   clus.type = "bimetallic";
+    if(N_Simbolo_1>=N_Simbolo_2)
+    {
+       clus.swap(N_Simbolo_1);
+    }
+    else
+    {
+       clus.swap(N_Simbolo_2);
+    }
   }
   else
   {
@@ -137,90 +168,97 @@ while(i+m < iteraciones)
     }
     else
     {
-      clus.kicklenard(step_width);
+      clus.kick_lennard(step_width);
     }
   }
-  system("./run.sh");
-  system("grep 'Have a nice day. ' output.out | wc -l > contenido.txt");
-  ifstream cont("contenido.txt");
-  cont>>contenido;
-  cont.close();
-  system("rm contenido.txt");
-  
-
+  geometry_file.clear();
+  geometry_file=file_name+"/geometry.in";
+  clus.print_fhi(geometry_file);
+  command.clear();
+  command="cd "+file_name+" ; ./run.sh";
+  system(command.c_str());
+  command.clear();
+  command="cd "+file_name+" ; grep 'Have a nice day' output.out | wc -l";
+  contenido=int_pipe(command);
+  cout<<command<<endl;
+  cout<<contenido<<endl;
+// Starting randomly if last configuration fails
   while (contenido!=1)
   {
   cout<<" --> SCF failed. Starting again from randomly generated structure! "<<endl;
-
-  if(n>3)  //Esto quiere decir que es bimetalico
+// sera necesario borrar geometry.in???
+  if(N_Simbolo_2>0)
   {
-    	if(randomness==1)  // fully random
+        if(randomness==1)  // fully random
       {
-        clus.srand_generator
+        clus.srand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
       }
       else //pseudoaleatorio
       {
-        clus.rand_generator
+        clus.rand_generator(Simbolo_1,N_Simbolo_1,Simbolo_2,N_Simbolo_2);
       }
   }
   else //es monometalico
   {
-      	if(randomness==1)  // fully random
+        if(randomness==1)  // fully random
       {
-        clus.srand_generator
+        clus.srand_generator(Simbolo_1,N_Simbolo_1);
       }
       else //pseudoaleatorio
       {
-        clus.rand_generator
+        clus.rand_generator(Simbolo_1,N_Simbolo_1);
       }
   }
-
-  system("./run.sh");
-  system("grep 'Have a nice day. ' output.out | wc -l > contenido.txt");
-  ifstream cont("contenido.txt");
-  cont>>contenido;
-  cont.close();
-  system("rm contenido.txt");
+  clus.print_fhi(geometry_file);
+  command.clear();
+  command="cd "+file_name+" ;  ./run.sh";
+  system(command.c_str());
+  command.clear();
+  command="cd "+file_name+" ; grep 'Have a nice day' output.out | wc -l";
+  contenido=int_pipe(command.c_str());
   }
-
-  ################################################################################################
-  #                                     Save  configuration                                      #
-  ################################################################################################
-
-
-EnergiaAnterior=energy;
-system("grep \" | Total energy of the DFT / Hartree-Fock s.c.f. calculation \" output.out | cut -d \":\" -f 2  | cut -d 'e' -f 1 > energy.txt");
-ifstream en("energy.txt");
-en>>energy;
-en.close();
-system("rm energy.txt");
-
-clus.read_fhi("geometry.in.next_step");
-clus.print_xyz("cordinates"+to_string(i)+".xyz".c_str(), energy );
-system("mv output.out output"+to_string(i)+".out".c_str());
-system("mv geometry.in geometry"+to_string(i)+".in".c_str());
-system("echo "+to_string(i)+"  "+to_string(energy)+" >> energies.txt".c_str() );
-
-
-  ################################################################################################
-  #                                  Metropolis Monte-Carlo                                      #
-  ################################################################################################
-
-
-kBT = 0.00008617 * temperature_K;
-if (pow(e,(EnergiaAnterior-energy)/kBT) > random_number(0,1))
+//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+//                                         SAVE ENERGIES                                          //
+//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+EnergiaAnterior=Energy;
+command.clear();
+command="cd "+file_name+" ; grep \" | Total energy of the DFT \" output.out | awk '{print $12}' ";
+Energy=float_pipe(command.c_str());
+E_str=string_pipe(command); //Modified
+command.clear();
+command=file_name+"/geometry.in.next_step";
+clus.read_fhi(command); command.clear();
+//   Need to move this to if and put as need to be for rejected or acepted   //
+command=file_name+"/coordinates"+i_str+".xyz";
+tag.clear(); tag=" Iteration "+i_str+" -----> Energy = "+E_str+" eV ";
+clus.print_xyz(command,tag);
+command.clear(); command="mv "+file_name+"/output.out "+file_name+"/output"+i_str+".out";
+system(command.c_str());
+command.clear(); command="mv "+file_name+"/geometry.in "+file_name+"/geometry"+i_str+".in";
+system(command.c_str());
+command.clear(); command="echo "+i_str+"  "+E_str+" >> "+file_name+"/energies.txt";
+system(command.c_str() );
+//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+//                                     Metropolis Monte-Carlo                                     //
+//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+k_BT = 0.00008617 * Temperature;
+if (pow(2.71,(EnergiaAnterior-Energy)/k_BT) > random_number(0,1))
 {
-	cout<<"--> Basin Hopping MC criteria: Energy accepted! "<<endl;
-    cout<<"--> Finished iteration $i"<<endl;
-    system("tail "-$i "energies.txt |  sort -nk2 > sorted.txt");
-    i++;
+  cout<<"--> Basin Hopping MC criteria: Energy accepted! "<<endl;
+  cout<<"--> Finished iteration "<<i<<endl;
+  command.clear(); command="tail -"+i_str+" "+file_name+"/energies.txt |  sort -nk2 > "+file_name+"/sorted.txt";
+  system(command.c_str());
+  i++;
 }
 else
 {
-	cout<<echo "--> Basin Hopping MC criteria: Energy rejected!"<<endl;
-    system("mv output"$i".out rejected/outputrejected"$i".out");
-    system("mv geometry"$i".in rejected/geometryrejected"$i".in");
-    m++;
+  cout<<"--> Basin Hopping MC criteria: Energy rejected!"<<endl;
+string m_str = to_string(m);
+  command.clear(); command="mv "+file_name+"/output"+i_str+".out "+file_name+"/rejected/outputrejected"+m_str+".out";
+  system(command.c_str());
+  command.clear(); command="mv "+file_name+"/geometry"+i_str+".in "+file_name+"/rejected/geometryrejected"+m_str+".in";
+  system(command.c_str());
+  m++;
 }
 }
 return 0;
