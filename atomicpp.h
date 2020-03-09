@@ -740,7 +740,7 @@ void Cluster::rand_generator(string Symbol_1, int N_Symbol_1, string Symbol_2="A
 /*********** Cluster_name.srand_generator("Ir",3,range) *************/
 
 
-void Cluster::srand_generator(string Symbol_1, int N_Symbol_1, string Symbol_2="AAA", int N_Symbol_2=0, float epsilon=2.5)
+void Cluster::srand_generator(string Symbol_1, int N_Symbol_1, string Symbol_2="AAA", int N_Symbol_2=0, float epsilon=1.0)
 {
 
   map<string, double> Radios;
@@ -820,18 +820,15 @@ void Cluster::srand_generator(string Symbol_1, int N_Symbol_1, string Symbol_2="
          {
             atom[i].Symbol=Symbol_1;
          }
+
          atom[i].R=assign_radii(Radios, atom[i].Symbol);
 
-         Mx=atom[random].x[0]+epsilon;  //Maximum range for random X
-         Nx=atom[random].x[0]-epsilon;  //Minimun range for random x
-         My=atom[random].x[1]+epsilon;  //Maximum range for random y
-         Ny=atom[random].x[1]-epsilon;  //Minimum range for random y
-         Mz=atom[random].x[2]+epsilon;  //Maximum range for random z
-         Nz=atom[random].x[2]-epsilon;  //Minimum range for randon z
+         double Mrandom =  -1.0;
+         double Nrandom =  1.0;
 
-         atom[i].x[0]=Nx+ ((double)rand())/((double)RAND_MAX )* (Mx-Nx);
-         atom[i].x[1]=Ny+ ((double)rand())/((double)RAND_MAX )* (My-Ny);
-         atom[i].x[2]=Nz+ ((double)rand())/((double)RAND_MAX )* (Mz-Nz);
+         atom[i].x[0]= atom[random].x[0] + ((atom[i].R) * (Mrandom + (double)rand()/((double)RAND_MAX/(Nrandom-Mrandom+1)+1) ));
+         atom[i].x[1]= atom[random].x[1] + ((atom[i].R) * (Mrandom + (double)rand()/((double)RAND_MAX/(Nrandom-Mrandom+1)+1) ));
+         atom[i].x[2]= atom[random].x[2] + ((atom[i].R) * (Mrandom + (double)rand()/((double)RAND_MAX/(Nrandom-Mrandom+1)+1) ));
 
          rejected=0;
 
@@ -839,8 +836,11 @@ void Cluster::srand_generator(string Symbol_1, int N_Symbol_1, string Symbol_2="
          {
             Distance=sqrt(pow(atom[i].x[0]-atom[j].x[0],2)+pow(atom[i].x[1]-atom[j].x[1],2)+pow(atom[i].x[2]-atom[j].x[2],2));
             criterio=atom[i].R+atom[j].R;
-            if(Distance<criterio)
+
+            double criterio2 = (2.2 * (1.5928235)*(pow(Nat,1.0/3.0))); // CHECK "as a function of size" e.g ---> (Nat / 2.0)
+            if(Distance<criterio || Distance>criterio2)
             {
+             cout<<"Criteria not reached"<<endl;
                rejected++;
             }
          }
@@ -1076,18 +1076,17 @@ void Cluster::rotate_Deg(float thetadeg, float phideg)
 void Cluster::kick(float step_width)
 {
 
-   float DelX, DelY, DelZ;
+///   float DelX, DelY, DelZ;
    srand(time(NULL));
 
    for(i=0;i<Nat;i++)
    {
-      DelX=((double)rand()/((double)RAND_MAX))*step_width;
-      DelY=((double)rand()/((double)RAND_MAX))*step_width;
-      DelZ=((double)rand()/((double)RAND_MAX))*step_width;
+      double Mrandom =  -1.0;
+      double Nrandom =  1.0;
 
-      atom[i].x[0]=DelX+atom[i].x[0];
-      atom[i].x[1]=DelY+atom[i].x[1];
-      atom[i].x[2]=DelZ+atom[i].x[2];
+      atom[i].x[0]= atom[i].x[0] + ( (Mrandom + (double)rand()/((double)RAND_MAX/(Nrandom-Mrandom+1)+1)) * step_width );
+      atom[i].x[1]= atom[i].x[1] + ( (Mrandom + (double)rand()/((double)RAND_MAX/(Nrandom-Mrandom+1)+1)) * step_width );
+      atom[i].x[2]= atom[i].x[2] + ( (Mrandom + (double)rand()/((double)RAND_MAX/(Nrandom-Mrandom+1)+1)) * step_width );
    }
 
 }
