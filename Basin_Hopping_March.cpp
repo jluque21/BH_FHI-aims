@@ -1,3 +1,6 @@
+#include<stdio.h>
+#include<stdio.h>
+#include<unistd.h>
 #include"atomicpp.h"
 string Simbolo_1, Simbolo_2, file_name, command, aux,geometry_file, initialization_file, outputfile, i_str, E_str, tag;
 int continue_alg,  Ncore, randomness, kick, iteraciones,swap_step, contenido, m, N_Simbolo_1, N_Simbolo_2, count, fail_counter=0, resto, failed_max,crystal;
@@ -45,15 +48,12 @@ if(continue_alg==1)
   //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
   //                                      RESTART ALGORITHM                                         //
   //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
-      string iteration_counter_i ="cd ";
-             iteration_counter_i+=file_name;
-             iteration_counter_i+=" ; for i in $(ls coord*xyz ); do head -2 $i | tail -1 | awk '{ print $2 }' ; done | sort -n  | tail -1";
-      i=int_pipe(iteration_counter_i,1);
+      chdir(file_name.c_str());
+      string iteration_counter_i ="ls coord*xyz | wc -l";
+      i=int_pipe(iteration_counter_i);
 
-      string iteration_counter_m ="cd ";
-             iteration_counter_m+=file_name;
-             iteration_counter_m+="/rejected ; ls coord*xyz 2> /dev/null | wc -l ";
-      m=int_pipe(iteration_counter_m,0);
+      string iteration_counter_m ="ls ./rejected/coord*xyz | wc -l ";
+      m=int_pipe(iteration_counter_m);
 }
 
 
@@ -63,11 +63,12 @@ else
   //                                        BEGIN ALGORITHM                                         //
   //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
    // Creates work directory
-   command ="if [ -d "+file_name+" ] ; then mv "+file_name+" other_"+file_name;
+   command ="if [ -d "+file_name+" ] ; then mv "+file_name+" other_"+file_name; ///// Modify to be in c++ code??
    command+=" ; fi ; mkdir "+file_name+" ; cd "+file_name+"  ; mkdir rejected ;";
    command+=" cp ../input/* .";
    system(command.c_str());
    command.clear();
+   chdir(file_name.c_str());
    i=1; m=0;
    contenido=0;
    count=1;
@@ -78,7 +79,7 @@ else
       //Inicializa archivo geometry.in
         command ="cp ";
         command+=initialization_file;
-        command+=" "+file_name+"/geometry.in";
+        command+="geometry.in";
         system(command.c_str());
         command.clear();
         count++;
@@ -111,16 +112,16 @@ else
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
          if(crystal==0){
             geometry_file.clear();
-            geometry_file=file_name+"/geometry.in";
+            geometry_file="geometry.in";
             clus.print_fhi(geometry_file);
          }
          else{
             clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min());
             geometry_file.clear();
-            geometry_file=file_name+"/geometry.tmp";
+            geometry_file="geometry.tmp";
             clus.print_fhi(geometry_file);
             command.clear();
-            command="cd "+file_name+" ; cat crystal.in > geometry.in ; cat geometry.tmp >> geometry.in ; rm geometry.tmp ";
+            command="cat crystal.in > geometry.in ; cat geometry.tmp >> geometry.in ; rm geometry.tmp ";
             system(command.c_str());
             command.clear();
          }
@@ -128,27 +129,27 @@ else
       }
 
       // RUN FIRST CONFIGURATION:
-      command="cd "+file_name+" ; ./run.sh";
+      command="./run.sh";
       system(command.c_str());
       command.clear();
-      command="cd "+file_name+" ; grep 'Have a nice day' output.out | wc -l";
+      command="grep 'Have a nice day' output.out | wc -l";
       contenido=int_pipe(command.c_str());
       command.clear();
    }
 
 
    /// Store energy and optimized geometry:
-   command="cd "+file_name+" ; grep \" | Total energy of the DFT \" output.out | awk '{print $12}' ";
+   command="grep \" | Total energy of the DFT \" output.out | awk '{print $12}' ";
    Energy=double_pipe(command.c_str());
    i_str=to_string(i);
    E_str=string_pipe(command); //Better for Energies with all the value
    command.clear();
 
    // get initial, relaxed geometry and store it as xyz (first xyz!)
-   command=file_name+"/geometry.in.next_step";
+   command="geometry.in.next_step";
    clus.read_fhi(command);
    command.clear();
-   command=file_name+"/coordinates1.xyz";
+   command="coordinates1.xyz";
    tag.clear();
    tag=" Iteration "+i_str+" -----> Energy = "+E_str+" eV ";
    clus.print_xyz(command,tag);
@@ -156,25 +157,15 @@ else
 
 
    // store first output and geometry files:
-   command="cd "+file_name+" ; mv output.out output1.out";
+   command="mv output.out output1.out";
    system(command.c_str());
    command.clear();
 
-   command="cd "+file_name+" ; rm output.out";
+   command="mv geometry.in geometry1.in";
    system(command.c_str());
    command.clear();
 
-
-   command="cd "+file_name+" ; mv geometry.in initial1.fhi";
-   system(command.c_str());
-   command.clear();
-
-   command="cd "+file_name+" ; rm geometry.in";
-   system(command.c_str());
-   command.clear();
-
-
-   command=" echo 'Step ----> Energy[eV]' >> energies.txt ; echo '1 ---->' "+E_str+" >> energies.txt";
+   command="echo 'Step ----> Energy[eV]' >> energies.txt ; echo '1 ---->' "+E_str+" >> energies.txt";
    system(command.c_str());
    command.clear();
 
@@ -223,7 +214,7 @@ while(i+m <= iteraciones)
   {
    // get relaxed coordinates from initial configuration (i=1):
    geometry_file.clear();
-   geometry_file=file_name+"/geometry.in.next_step";
+   geometry_file="geometry.in.next_step";
    command.clear();
    command="cat "+geometry_file;
    system(command.c_str());
@@ -239,7 +230,7 @@ while(i+m <= iteraciones)
   {
    // get relaxed coordinates from initial configuration (i=1):
    geometry_file.clear();
-   geometry_file=file_name+"/geometry.in.next_step";
+   geometry_file="geometry.in.next_step";
    command.clear();
    command="cat "+geometry_file;
    system(command.c_str());
@@ -297,7 +288,7 @@ while(i+m <= iteraciones)
   if(crystal==0)
    {
       geometry_file.clear();
-      geometry_file=file_name+"/geometry.in";
+      geometry_file="geometry.in";
       clus.print_fhi(geometry_file);
    }
 
@@ -306,51 +297,24 @@ while(i+m <= iteraciones)
    {
       clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min() );
       geometry_file.clear();
-      geometry_file=file_name+"/geometry.tmp";
+      geometry_file="geometry.tmp";
       clus.print_fhi(geometry_file);
-      command="cd "+file_name+" ; cat crystal.in > geometry.in ; cat geometry.tmp >> geometry.in ; rm geometry.tmp ";
+      command="cat crystal.in > geometry.in ; cat geometry.tmp >> geometry.in ; rm geometry.tmp ";
       system(command.c_str());
       command.clear();
    }
 
-  // check!:
-
-  cout<<"Running FHI-AIMS OPT"<<endl;
-
-
 
   ////////////////////////////////////////////
   // RUNNING FHI-AIMS SECOND CONFIGURATION....:
-  command="cd "+file_name+" ; cat geometry.in";
+  command="./run.sh";
   system(command.c_str());
   command.clear();
-
-  command="sleep 5";
-  system(command.c_str());
-  command.clear();
-  /////////////////////////////////////////////
-
-
-
-//*********************************************************************************
-  command="cd "+file_name+" ; ./run.sh";
-  system(command.c_str());
-  command.clear();
-
-
- // --->>> ERROR!! WHY SECOND CONFIGURATION STARTS AS RANDOMLY GENERATED FIRST:
-
-//*********************************************************************************
-
 
   // Checking that geometry has converged:
-  command="cd "+file_name+" ; grep 'Have a nice day' output.out | wc -l";
+  command="grep 'Have a nice day' output.out | wc -l";
   contenido=int_pipe(command);
   command.clear();
-
-
-
-
 
   //***********************************************************************************
   // If structure DID NOT converged, then:
@@ -364,7 +328,7 @@ while(i+m <= iteraciones)
      cout<<" Kicking ... again"<<endl;
      fail_counter++;
      geometry_file.clear();
-     geometry_file=file_name+"/coordinates"+i_str+".xyz";
+     geometry_file="coordinates"+i_str+".xyz";
      c_aux.read_xyz(geometry_file);
      geometry_file.clear();
      geometry_file="aux.fhi";
@@ -453,16 +417,16 @@ while(i+m <= iteraciones)
 
   if(crystal==0){
       geometry_file.clear();
-      geometry_file=file_name+"/geometry.in";
+      geometry_file="geometry.in";
       clus.print_fhi(geometry_file);
   }
 
   else{
       clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min() );
       geometry_file.clear();
-      geometry_file=file_name+"/geometry.tmp";
+      geometry_file="geometry.tmp";
       clus.print_fhi(geometry_file);
-      command="cd "+file_name+" ; cat crystal.in > geometry.in ; cat geometry.tmp >> geometry.in ; rm geometry.tmp ";
+      command="cat crystal.in > geometry.in ; cat geometry.tmp >> geometry.in ; rm geometry.tmp ";
       system(command.c_str());
       command.clear();
   }
@@ -470,12 +434,12 @@ while(i+m <= iteraciones)
 
   // THIRD RUN FOR NON-CONVERGED STRUCTURES
 
-  command="cd "+file_name+" ;  ./run.sh";
+  command="./run.sh";
   system(command.c_str());
   command.clear();
 
   // IF CONVERGED....
-  command="cd "+file_name+" ; grep 'Have a nice day' output.out | wc -l";
+  command="grep 'Have a nice day' output.out | wc -l";
   contenido=int_pipe(command.c_str());
   command.clear();
   }
@@ -491,30 +455,30 @@ while(i+m <= iteraciones)
 
 EnergiaAnterior=Energy;
 
-command="cd "+file_name+" ; grep \" | Total energy of the DFT \" output.out | awk '{print $12}' ";
+command="grep \" | Total energy of the DFT \" output.out | awk '{print $12}' ";
 Energy=float_pipe(command.c_str());
-E_str=string_pipe(command); //Modified
+E_str=string_pipe(command);
 command.clear();
 
-
-command=file_name+"/geometry.in.next_step";
+/////Perhaps this part can be inside Metropolis Monte-Carlo (in step of mv outi mv out)
+command="geometry.in.next_step";
 clus.read_fhi(command);
 command.clear();
 
 
-command=file_name+"/coordinates"+i_str+".xyz";
+command="coordinates"+i_str+".xyz";
 tag.clear();
 tag=" Iteration "+i_str+" -----> Energy = "+E_str+" eV ";
 clus.print_xyz(command,tag);
 command.clear();
 
 
-command="mv "+file_name+"/output.out "+file_name+"/output"+i_str+".out";
+command="mv output.out output"+i_str+".out";
 system(command.c_str());
 command.clear();
 
 
-command="mv "+file_name+"/geometry.in "+file_name+"/geometry"+i_str+".in";
+command="mv geometry.in geometry"+i_str+".in";
 system(command.c_str());
 command.clear();
 
@@ -528,10 +492,10 @@ if (pow(2.71,(EnergiaAnterior-Energy)/k_BT) > random_number(0,1))
 {
   cout<<"--> Basin Hopping MC criteria: Energy accepted! "<<endl;
   cout<<"--> Finished iteration "<<i<<endl;
-  command="echo "+i_str+" '---->'  "+E_str+" >> "+file_name+"/energies.txt";
+  command="echo "+i_str+" '---->'  "+E_str+" >> energies.txt";
   system(command.c_str());
   command.clear();
-  command="tail -"+i_str+" "+file_name+"/energies.txt |  sort -nk3 > "+file_name+"/sorted.txt";
+  command="tail -"+i_str+" energies.txt |  sort -nk3 > sorted.txt";
   system(command.c_str());
   command.clear();
   i++;
@@ -544,13 +508,14 @@ else
   cout<<"--> Basin Hopping MC criteria: Energy rejected!"<<endl;
   m++;
   string m_str = to_string(m);
-  command="mv "+file_name+"/output"+i_str+".out "+file_name+"/rejected/outputrejected"+m_str+".out";
+  command="mv output"+i_str+".out ./rejected/outputrejected"+m_str+".out";
   system(command.c_str());
   command.clear();
-  command="mv "+file_name+"/geometry"+i_str+".in "+file_name+"/rejected/geometryrejected"+m_str+".in";
+  command="mv geometry"+i_str+".in ./rejected/geometryrejected"+m_str+".in";
   system(command.c_str());
   command.clear();
   m_str.clear();
+  fail_counter=0;
 }
 
 
