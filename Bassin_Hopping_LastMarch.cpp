@@ -121,7 +121,7 @@ else
             geometry_file="geometry.tmp";
             clus.print_fhi(geometry_file);
             command.clear();
-            command="cat crystal.in > geometry.in ; awk '/Au/{$6=\"initial_moment 0.5\"}1' geometry.tmp >> geometry.in ; rm geometry.tmp ";
+            command="cat crystal.in > geometry.in ; sed '/atom/a initial_moment 0.5' geometry.tmp >> geometry.in ; rm geometry.tmp ";
             system(command.c_str());
             command.clear();
 //            command="awk '/Au/{$6=\"initial_moment 0.5\"}1' geometry_test.in >> geometry.in ; rm geometry_test.in";
@@ -303,7 +303,7 @@ while(i+m <= iteraciones)
       geometry_file.clear();
       geometry_file="geometry.tmp";
       clus.print_fhi(geometry_file);
-      command="cat crystal.in > geometry.in ; cat geometry.tmp >> geometry.in ; rm geometry.tmp ";
+      command="cat crystal.in > geometry.in ; sed '/atom/a initial_moment 0.5' geometry.tmp >> geometry.in ; rm geometry.tmp ";
       system(command.c_str());
       command.clear();
    }
@@ -430,7 +430,7 @@ while(i+m <= iteraciones)
       geometry_file.clear();
       geometry_file="geometry.tmp";
       clus.print_fhi(geometry_file);
-      command="cat crystal.in > geometry.in ; cat geometry.tmp >> geometry.in ; rm geometry.tmp ";
+      command="cat crystal.in > geometry.in ; sed '/atom/a initial_moment 0.5' geometry.tmp >> geometry.in ; rm geometry.tmp ";
       system(command.c_str());
       command.clear();
   }
