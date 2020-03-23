@@ -8,7 +8,7 @@ float step_width, Temperature, Energy, Energia, EnergiaAnterior, k_BT, damp ;
 float x_min,y_min,z_min,x_max,y_max,z_max;
 Cluster clus_1, clus_2, clus, c_aux;
 Crystal cristal;
-float dist=1.0;
+float dist=0.0;
 int main(int argc, char *argv[]){
 //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 //                                    Gets data from input.bh                                     //
@@ -116,12 +116,13 @@ else
             clus.print_fhi(geometry_file);
          }
          else{
-            clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min());
+            clus.move((x_max-x_min)/2.0-clus.x_min()/2.0+random_number(-dist,dist),(y_max-y_min)/2.0-clus.y_min()/2.0+random_number(-dist,dist),z_max-clus.z_min() ); // NEW
+//OLD            clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min());
             geometry_file.clear();
             geometry_file="geometry.tmp";
             clus.print_fhi(geometry_file);
             command.clear();
-            command="cat crystal.in > geometry.in ; sed '/atom/a initial_moment 0.5' geometry.tmp >> geometry.in ; rm geometry.tmp ";
+            command="cat crystal.in > geometry.in ; sed '/atom/a initial_moment 0.5' geometry.tmp >> geometry.in ; rm geometry.tmp "; //NEW, put initial_moment for all cluster atoms in the next line
             system(command.c_str());
             command.clear();
 //            command="awk '/Au/{$6=\"initial_moment 0.5\"}1' geometry_test.in >> geometry.in ; rm geometry_test.in";
@@ -299,11 +300,12 @@ while(i+m <= iteraciones)
   //.. or periodic case:
   else
    {
-      clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min() );
+            clus.move((x_max-x_min)/2.0-clus.x_min()/2.0+random_number(-dist,dist),(y_max-y_min)/2.0-clus.y_min()/2.0+random_number(-dist,dist),z_max-clus.z_min() ); //NEW
+// OLD      clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min() );
       geometry_file.clear();
       geometry_file="geometry.tmp";
       clus.print_fhi(geometry_file);
-      command="cat crystal.in > geometry.in ; sed '/atom/a initial_moment 0.5' geometry.tmp >> geometry.in ; rm geometry.tmp ";
+      command="cat crystal.in > geometry.in ; sed '/atom/a initial_moment 0.5' geometry.tmp >> geometry.in ; rm geometry.tmp "; // NEW, put initial_moment 0.5 in next line for all clusters atoms
       system(command.c_str());
       command.clear();
    }
@@ -426,7 +428,8 @@ while(i+m <= iteraciones)
   }
 
   else{
-      clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min() );
+            clus.move((x_max-x_min)/2.0-clus.x_min()/2.0+random_number(-dist,dist),(y_max-y_min)/2.0-clus.y_min()/2.0+random_number(-dist,dist),z_max-clus.z_min() );
+//OLD      clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min() );
       geometry_file.clear();
       geometry_file="geometry.tmp";
       clus.print_fhi(geometry_file);
