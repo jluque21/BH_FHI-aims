@@ -116,7 +116,7 @@ else
             clus.print_fhi(geometry_file);
          }
          else{
-            clus.move((x_max-x_min)/2.0-clus.x_min()/2.0+random_number(-dist,dist),(y_max-y_min)/2.0-clus.y_min()/2.0+random_number(-dist,dist),z_max-clus.z_min() ); // NEW
+            clus.move((x_max-x_min)/2.0-(clus.x_max()-clus.x_min())/2.0,(y_max-y_min)/2.0-(clus.y_max()-clus.y_min())/2.0,z_max-clus.z_min() ); // NEW
 //OLD            clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min());
             geometry_file.clear();
             geometry_file="geometry.tmp";
@@ -300,7 +300,7 @@ while(i+m <= iteraciones)
   //.. or periodic case:
   else
    {
-            clus.move((x_max-x_min)/2.0-clus.x_min()/2.0+random_number(-dist,dist),(y_max-y_min)/2.0-clus.y_min()/2.0+random_number(-dist,dist),z_max-clus.z_min() ); //NEW
+            clus.move((x_max-x_min)/2.0-clus.x_min()+random_number(-dist,dist),(y_max-y_min)/2.0-clus.y_min()+random_number(-dist,dist),z_max-clus.z_min() ); //NEW
 // OLD      clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min() );
       geometry_file.clear();
       geometry_file="geometry.tmp";
@@ -428,7 +428,7 @@ while(i+m <= iteraciones)
   }
 
   else{
-            clus.move((x_max-x_min)/2.0-clus.x_min()/2.0+random_number(-dist,dist),(y_max-y_min)/2.0-clus.y_min()/2.0+random_number(-dist,dist),z_max-clus.z_min() );
+            clus.move((x_max-x_min)/2.0-clus.x_min()+random_number(-dist,dist),(y_max-y_min)/2.0-clus.y_min()+random_number(-dist,dist),z_max-clus.z_min() );
 //OLD      clus.move((x_max-x_min)/2.0+random_number(-dist,dist),(y_max-y_min)/2.0+random_number(-dist,dist),z_max-clus.z_min() );
       geometry_file.clear();
       geometry_file="geometry.tmp";
