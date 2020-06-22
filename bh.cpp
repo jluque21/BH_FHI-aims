@@ -1,3 +1,25 @@
+/*\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+# Implementation of the Basin Hopping (BH) algorithm for
+# structure optimization
+#
+# Version X.X June 2020
+#
+# BH algorithm has been implemented using C++;
+# coupled to FHI-aims X.X (DFT code as calculator)
+# It also works with newest XX version, XX
+#
+# Author : Jorge Refugio Fábila Fabian <jorge_fabila@ciencias.unam.mx> (IF-UNAM)
+# Author : Dr. Jonathan Casildo Luque Ceballos <jluque@fisica.unam.mx> (IF-UNAM)
+# Advisor : Dr. Oliver Paz Borbon <oliver_paz@fisica.unam.mx> (IF-UNAM)
+#
+# Financial Support (PAPIIT-UNAM: Project IA102716
+# Computational resources (Miztli-UNAM):  SC15-1-IG-82
+# SC16-1-IG-78
+#
+#
+# Note: Output folders will be generated in current directory
+\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/   
+
 #include<stdio.h>
 #include<stdio.h>
 #include<unistd.h>
