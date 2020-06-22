@@ -5,7 +5,6 @@
         initialization_file = False
         file_name = Au5
         continue = 0
-        Ncore = 24
         cluster_ntyp = [Au:5]
         temperature_K = 2500
         step_width = 0.8    # 1.5 for kick = 1       0.8 for kick = 0
