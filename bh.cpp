@@ -1,6 +1,5 @@
 /*\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-# Implementation of the Basin Hopping (BH) algorithm for
-# structure optimization
+# Implementation of the Basin Hopping (BH) algorithm for structure optimization
 #
 # Version X.X June 2020
 #
